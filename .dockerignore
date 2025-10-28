@@ -1,0 +1,18 @@
+# Minimiza o contexto de build e evita copiar artefatos locais
+# Padrões recomendados para projetos .NET
+
+**/[Bb]in/
+**/[Oo]bj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/TestResults/
+**/node_modules/
+**/.git/
+**/.gitignore
+**/.DS_Store
+
+# Arquivos temporários e logs
+**/*.user
+**/*.suo
+**/*.log

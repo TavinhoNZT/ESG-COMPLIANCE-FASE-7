@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  api:
+    image: ghcr.io/${GHCR_OWNER}/esg-compliance-api:staging
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ConnectionStrings__DefaultConnection=Server=db;Database=${DB_NAME:-EsgComplianceDb};User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=false;MultipleActiveResultSets=true
+    ports:
+      - "8080:8080"
+    networks:
+      - appnet
+    restart: always
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssqldata-staging:/var/opt/mssql
+    networks:
+      - appnet
+    restart: always
+
+volumes:
+  mssqldata-staging:
+
+networks:
+  appnet:
