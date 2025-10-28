@@ -1,0 +1,16 @@
+{
+  "$schema": " `https://json-schema.org/draft/2020-12/schema` ",
+  "title": "LicencasList",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+      "id": { "type": ["integer", "string"] },
+      "nome": { "type": ["string", "null"] },
+      "status": { "type": "string", "enum": ["valida", "expirada", "pendente"] },
+      "dataVencimento": { "type": "string", "format": "date" }
+    },
+    "required": ["id", "status"]
+  }
+}
