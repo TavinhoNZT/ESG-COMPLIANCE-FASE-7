@@ -49,7 +49,8 @@ jobs:
 
       - name: Buildar imagem da API (Docker)
         run: |
-          docker build -t esg-api-test:local -f "ESG API/ESG.Compliance.Api/Dockerfile" .
+          # Build apontando o contexto para a pasta "ESG API" (onde o Dockerfile espera caminhos relativos)
+          docker build -t esg-api-test:local -f "ESG API/ESG.Compliance.Api/Dockerfile" "ESG API"
 
       - name: Criar rede e conectar DB
         run: |
