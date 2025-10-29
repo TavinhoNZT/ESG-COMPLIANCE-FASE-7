@@ -50,7 +50,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Permite desabilitar o redirecionamento para HTTPS (útil em CI/Docker sem TLS)
+var disableHttpsRedirect = Environment.GetEnvironmentVariable("DISABLE_HTTPS_REDIRECT");
+if (string.IsNullOrEmpty(disableHttpsRedirect))
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
 
