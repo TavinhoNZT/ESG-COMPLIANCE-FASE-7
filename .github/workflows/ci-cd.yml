@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     defaults:
       run:
         working-directory: ESG API
@@ -22,6 +23,11 @@ jobs:
       # Base URL que os testes BDD irão consumir
       TEST_BASE_URL: http://localhost:8080
 >>>>>>> 255f29c (ci: ajustes finais no workflow CI/CD (Docker build context e readiness))
+=======
+    defaults:
+      run:
+        working-directory: ESG API
+>>>>>>> c0903df (ci: atualiza workflow do CI/CD)
 
     steps:
       - name: Checkout repository
@@ -32,6 +38,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+<<<<<<< HEAD
 <<<<<<< HEAD
       - name: Restore dependencies
         run: dotnet restore ESG.Compliance.Api.sln
@@ -45,46 +52,33 @@ jobs:
       - name: Build (Release)
         run: dotnet build -c Release --no-restore
 >>>>>>> 255f29c (ci: ajustes finais no workflow CI/CD (Docker build context e readiness))
+=======
+      - name: Restore dependencies
+        run: dotnet restore ESG.Compliance.Api.sln
 
-      # Sobe a API em background escutando na porta 8080
+      - name: Build (Release)
+        run: dotnet build ESG.Compliance.Api.sln -c Release --no-restore
+>>>>>>> c0903df (ci: atualiza workflow do CI/CD)
+
       - name: Start API
         run: |
-          dotnet run --project "ESG.Compliance.Api/ESG.Compliance.Api.csproj" --urls="http://0.0.0.0:${API_PORT}" &
+          dotnet run --project ESG.Compliance.Api/ESG.Compliance.Api.csproj --urls=http://0.0.0.0:8080 &
           echo "API_PID=$!" >> $GITHUB_ENV
 
-      # Aguarda a API responder antes de iniciar os testes
       - name: Wait for API to be ready
         run: |
-          for i in {1..30}; do
-            if curl -s "http://localhost:${API_PORT}/swagger/index.html" -o /dev/null; then
-              echo "API is up ✅"
-              exit 0
-            fi
-            echo "Aguardando API subir... ($i/30)"
-            sleep 2
+          for i in {1..40}; do
+            curl -fsS http://localhost:8080/swagger/index.html >/dev/null && echo "✅ API UP" && exit 0
+            echo "⏳ Waiting API... ($i)"; sleep 3
           done
-          echo "API não respondeu a tempo"; exit 1
+          echo "❌ API did not start in time"; exit 1
 
-      # Executa os testes BDD apontando para a API local
       - name: Run BDD Tests (Release)
         env:
           TEST_BASE_URL: http://localhost:8080
-        run: |
-          dotnet test "ESG.Compliance.BddTests/ESG.Compliance.BddTests.csproj" -c Release --no-build --verbosity normal
+        run: dotnet test ESG.Compliance.BddTests -c Release --no-build --verbosity normal
 
-      # (Opcional) Em caso de falha, mostra processos ativos e últimas linhas de logs
-      - name: Debug info on failure
-        if: failure()
-        run: |
-          echo "----- dotnet processes -----"
-          ps aux | grep dotnet | grep -v grep || true
-          echo "----- curl API health -----"
-          curl -i "http://localhost:${API_PORT}/swagger/index.html" || true
-
-      # Encerra a API que ficou em background
       - name: Stop API
         if: always()
         run: |
-          if [ -n "${API_PID:-}" ]; then
-            kill $API_PID || true
-          fi
+          if [ -n "${{ env.API_PID }}" ]; then kill ${{ env.API_PID }} || true; fi
