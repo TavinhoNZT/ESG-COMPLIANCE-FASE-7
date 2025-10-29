@@ -82,6 +82,9 @@ jobs:
           docker logs esg-api || true
           exit 1
 
+      - name: Build BDD tests
+        run: dotnet build "ESG.Compliance.BddTests" -c Release --no-restore
+
       - name: Run BDD tests (Release)
         env:
           TEST_BASE_URL: http://localhost:8081

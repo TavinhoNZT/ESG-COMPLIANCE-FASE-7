@@ -11,7 +11,7 @@ public static class HttpClientFactoryESG
         var baseUrl = Environment.GetEnvironmentVariable("TEST_BASE_URL");
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            baseUrl = "http://localhost:8080";
+            baseUrl = "http://localhost:8081";
             Console.WriteLine($"[BDD] TEST_BASE_URL não definida, usando fallback: {baseUrl}");
         }
         else
