@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LicencasList",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+      "id": { "type": ["integer", "string"] },
+      "nomeDaLicenca": { "type": "string", "minLength": 1 },
+      "orgaoEmissor": { "type": "string", "minLength": 1 },
+      "numeroDocumento": { "type": ["string", "null"] },
+      "dataDeEmissao": { "type": "string" },
+      "dataDeExpiracao": { "type": "string" },
+      "status": { "type": "string" }
+    },
+    "required": ["id", "nomeDaLicenca", "orgaoEmissor", "dataDeExpiracao", "status"]
+  }
+}

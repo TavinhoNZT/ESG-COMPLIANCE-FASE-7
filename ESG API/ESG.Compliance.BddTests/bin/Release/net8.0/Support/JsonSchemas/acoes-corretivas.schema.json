@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AcaoCorretiva",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": ["integer", "string"] },
+    "auditoriaId": { "type": ["integer", "string"] },
+    "descricao": { "type": "string", "minLength": 1 },
+    "dataImplementacao": { "type": "string", "format": "date" },
+    "responsavel": { "type": "string", "minLength": 1 }
+  },
+  "required": ["auditoriaId", "descricao", "dataImplementacao", "responsavel"]
+}
