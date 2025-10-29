@@ -10,7 +10,9 @@ jobs:
   build_and_test:
     runs-on: ubuntu-latest
 
-<<<<<<< HEAD
+    defaults:
+      run:
+        working-directory: ESG API
 <<<<<<< HEAD
     defaults:
       run:
@@ -23,13 +25,9 @@ jobs:
       # Base URL que os testes BDD irão consumir
       TEST_BASE_URL: http://localhost:8080
 >>>>>>> 255f29c (ci: ajustes finais no workflow CI/CD (Docker build context e readiness))
-=======
-    defaults:
-      run:
-        working-directory: ESG API
->>>>>>> c0903df (ci: atualiza workflow do CI/CD)
 
     steps:
+      - name: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -38,7 +36,8 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-<<<<<<< HEAD
+      - name: Restore dependencies
+        run: dotnet restore ESG.Compliance.Api.sln
 <<<<<<< HEAD
       - name: Restore dependencies
         run: dotnet restore ESG.Compliance.Api.sln
@@ -50,15 +49,9 @@ jobs:
         run: dotnet restore
 
       - name: Build (Release)
+        run: dotnet build ESG.Compliance.Api.sln -c Release --no-restore
         run: dotnet build -c Release --no-restore
 >>>>>>> 255f29c (ci: ajustes finais no workflow CI/CD (Docker build context e readiness))
-=======
-      - name: Restore dependencies
-        run: dotnet restore ESG.Compliance.Api.sln
-
-      - name: Build (Release)
-        run: dotnet build ESG.Compliance.Api.sln -c Release --no-restore
->>>>>>> c0903df (ci: atualiza workflow do CI/CD)
 
       - name: Start API
         run: |
