@@ -131,7 +131,18 @@ public class ApiStepDefinitions
 
         if (Uri.TryCreate(locationStr!, UriKind.Absolute, out var absolute))
         {
-            _lastLocationUrl = absolute.ToString();
+            if (absolute.Scheme == Uri.UriSchemeFile)
+            {
+                var filename = Path.GetFileName(absolute.LocalPath);
+                _client.Should().NotBeNull();
+                var baseUri = _client!.BaseAddress!;
+                var resolved = new Uri(baseUri, "/" + filename);
+                _lastLocationUrl = resolved.ToString();
+            }
+            else
+            {
+                _lastLocationUrl = absolute.ToString();
+            }
         }
         else
         {
@@ -160,17 +171,42 @@ public class ApiStepDefinitions
     private string BuildUrl(string rota)
     {
         if (string.IsNullOrWhiteSpace(rota)) throw new ArgumentException("rota inválida", nameof(rota));
-        // rota absoluta
-        if (Uri.TryCreate(rota, UriKind.Absolute, out var abs)) return abs.ToString();
-        // normaliza rota relativa
+        // tenta absoluta apenas para http(s)
+        if (Uri.TryCreate(rota, UriKind.Absolute, out var abs) &&
+            (abs.Scheme == Uri.UriSchemeHttp || abs.Scheme == Uri.UriSchemeHttps))
+        {
+            return abs.ToString();
+        }
+        // normaliza rota e remove possíveis prefixos file://
         var normalized = NormalizeRoute(rota);
         _client.Should().NotBeNull();
         var baseUri = _client!.BaseAddress!;
-        return new Uri(baseUri, normalized).ToString();
+        var resolved = new Uri(baseUri, normalized);
+        return resolved.ToString();
     }
 
     private static string NormalizeRoute(string rota)
     {
+        rota = rota?.Trim() ?? string.Empty;
+        // remove aspas
+        if (rota.Length >= 2 && rota.StartsWith("\"") && rota.EndsWith("\""))
+            rota = rota[1..^1];
+        // tratar file://
+        if (rota.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var fileUri = new Uri(rota);
+                var candidate = fileUri.IsAbsoluteUri ? fileUri.AbsolutePath : rota.Replace("file://", "");
+                rota = candidate;
+            }
+            catch
+            {
+                rota = rota.Replace("file://", "");
+            }
+        }
+        // normalizar separadores
+        rota = rota.Replace("\\", "/");
         if (string.IsNullOrWhiteSpace(rota)) return "/";
         return rota.StartsWith("/") ? rota : "/" + rota;
     }
