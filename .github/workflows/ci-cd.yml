@@ -10,6 +10,14 @@ on:
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
+
+    env:
+      DOTNET_ROLL_FORWARD: LatestMajor
+      # Porta onde a API vai rodar no runner
+      API_PORT: 8080
+      # Base URL que os testes BDD irão consumir
+      TEST_BASE_URL: http://localhost:8080
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,16 +25,53 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore "ESG API/ESG.Compliance.Api.sln"
+      - name: Restore
+        run: dotnet restore
 
       - name: Build (Release)
-        run: dotnet build "ESG API/ESG.Compliance.Api.sln" -c Release --no-restore
+        run: dotnet build -c Release --no-restore
 
-      - name: Run BDD tests (Release)
+      # Sobe a API em background escutando na porta 8080
+      - name: Start API
+        run: |
+          dotnet run --project "ESG.Compliance.Api/ESG.Compliance.Api.csproj" --urls="http://0.0.0.0:${API_PORT}" &
+          echo "API_PID=$!" >> $GITHUB_ENV
+
+      # Aguarda a API responder antes de iniciar os testes
+      - name: Wait for API to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s "http://localhost:${API_PORT}/swagger/index.html" -o /dev/null; then
+              echo "API is up ✅"
+              exit 0
+            fi
+            echo "Aguardando API subir... ($i/30)"
+            sleep 2
+          done
+          echo "API não respondeu a tempo"; exit 1
+
+      # Executa os testes BDD apontando para a API local
+      - name: Run BDD Tests (Release)
         env:
-          TEST_BASE_URL: http://localhost:8081
-          DOTNET_ROLL_FORWARD: LatestMajor
-        run: dotnet test "ESG API/ESG.Compliance.BddTests" -c Release --no-build --verbosity normal
+          TEST_BASE_URL: http://localhost:8080
+        run: |
+          dotnet test "ESG.Compliance.BddTests/ESG.Compliance.BddTests.csproj" -c Release --no-build --verbosity normal
+
+      # (Opcional) Em caso de falha, mostra processos ativos e últimas linhas de logs
+      - name: Debug info on failure
+        if: failure()
+        run: |
+          echo "----- dotnet processes -----"
+          ps aux | grep dotnet | grep -v grep || true
+          echo "----- curl API health -----"
+          curl -i "http://localhost:${API_PORT}/swagger/index.html" || true
+
+      # Encerra a API que ficou em background
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -n "${API_PID:-}" ]; then
+            kill $API_PID || true
+          fi
